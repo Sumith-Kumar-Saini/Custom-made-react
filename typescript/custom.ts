@@ -146,8 +146,9 @@ export class ComponentBuilder {
     }
 
     const componentInstance = this.components[componentID];
-    const stateKey = `state_${Object.keys(componentInstance.state).length}`;
-    
+    // const stateKey = `state_${Object.keys(componentInstance.state).length}`;
+    const stateKey = `useState_${typeof initialState}`;
+
     if (!(stateKey in componentInstance.state)) {
       componentInstance.state[stateKey] = initialState;
     }
@@ -179,7 +180,7 @@ export class ComponentBuilder {
     if (!vdom) {
       throw new Error("VDOM is null and cannot be used to create an instance.");
     }
-    
+
     this.vdom = vdom;
     if (root !== null) {
       this.root = root;
@@ -204,6 +205,7 @@ export class ComponentBuilder {
   };
 }
 
+// future work to do
 // Create Component Instance
 class CCInstance {
   private component: ComponentFunc | null = null;
@@ -268,5 +270,3 @@ class CCInstance {
     };
   };
 }
-
-// now make renderElement, createInstance

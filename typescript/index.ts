@@ -22,20 +22,6 @@ const tailwindClasses = {
   label: "block text-sm font-medium text-gray-700 dark:text-gray-300",
 };
 
-// Input Component
-const Input = ({ props }: { props: Props }): VDOM => {
-  return createElement("input", { ...props, className: tailwindClasses.input });
-};
-
-// Label Component
-const Label = ({ props, children }: { props: Props; children: Children }): VDOM => {
-  return createElement(
-    "label",
-    { ...props, className: tailwindClasses.label },
-    ...children
-  );
-};
-
 // Button Component
 const Button = ({ props, children }: { props: Props; children: Children }): VDOM => {
   const buttonClasses = `${tailwindClasses.button} ${props.className || ""}`;
@@ -47,33 +33,19 @@ const Button = ({ props, children }: { props: Props; children: Children }): VDOM
 };
 
 // Counter Component with Input and Min/Max Limits
-const Counter = ({ props, children }: { props: Props; children: Children }): VDOM => {
+const Counter = (): VDOM => {
   const [count, setCount] = useState(0);
-  const [min, setMin] = useState(0);
-  const [max, setMax] = useState(100);
 
   const increment = () => {
-    if (count < max) {
       setCount(count + 1);
-    }
   };
 
   const decrement = () => {
-    if (count > min) {
-      setCount(count - 1);
-    }
+      setCount(count == 0 ? 0 : count - 1);
   };
 
   const reset = () => {
     setCount(0);
-  };
-
-  const handleMinChange = (event: Event) => {
-    setMin(parseInt((event.target as HTMLInputElement).value) || 0);
-  };
-
-  const handleMaxChange = (event: Event) => {
-    setMax(parseInt((event.target as HTMLInputElement).value) || 100);
   };
 
   return createElement(
@@ -102,26 +74,6 @@ const Counter = ({ props, children }: { props: Props; children: Children }): VDO
           { className: tailwindClasses.buttonReset, onClick: reset },
           "Reset"
         )
-      ),
-      createElement(
-        "div",
-        null,
-        createElement(Label, null, "Min:"),
-        createElement(Input, {
-          type: "number",
-          value: min,
-          onChange: handleMinChange,
-        })
-      ),
-      createElement(
-        "div",
-        null,
-        createElement(Label, null, "Max:"),
-        createElement(Input, {
-          type: "number",
-          value: max,
-          onChange: handleMaxChange,
-        })
       )
     )
   );
