@@ -16,6 +16,7 @@ export class ComponentBuilder {
   private componentCounter: number = 0;
   private components: { [key: number]: ComponentInstance } = {};
   private currentComponentId: number | null = null;
+  private hooksIndex: number = 0;
 
   /**
    * Creates a new Virtual DOM element
@@ -69,6 +70,7 @@ export class ComponentBuilder {
         Object.assign(componentInstance.state, newState);
       },
       instance: null,
+      hooks: { useState: new Map() },
     };
 
     this.components[componentID] = componentInstance;
@@ -84,6 +86,7 @@ export class ComponentBuilder {
   private renderComponent = (componentId: number): HTMLElement => {
     const componentInstance = this.components[componentId];
     this.currentComponentId = componentId;
+    this.hooksIndex = 0;
 
     const element = componentInstance.component({
       props: componentInstance.props || {},
@@ -146,29 +149,29 @@ export class ComponentBuilder {
     }
 
     const componentInstance = this.components[componentID];
-    // const stateKey = `state_${Object.keys(componentInstance.state).length}`;
+    const useStateKey = `useState_${this.hooksIndex++}`;
     const stateKey = `useState_${typeof initialState}`;
 
-    if (!(stateKey in componentInstance.state)) {
-      componentInstance.state[stateKey] = initialState;
+    if (!componentInstance.hooks.useState.has(useStateKey)) {
+      componentInstance.hooks.useState.set(useStateKey, { state: initialState });
     }
 
     const setState = (newState: T | ((prevState: T) => T)) => {
-      const prev = componentInstance.state[stateKey];
+      const prev = componentInstance.hooks.useState.get(useStateKey)?.state;
       const value =
         typeof newState === "function"
           ? (newState as (prevState: T) => T)(prev)
           : newState;
 
       if (value !== prev) {
-        componentInstance.state[stateKey] = value;
+        componentInstance.hooks.useState.set(useStateKey, { state: value });
         const element = this.renderComponent(componentID);
         componentInstance.instance?.replaceWith(element);
         componentInstance.instance = element;
       }
     };
 
-    return [componentInstance.state[stateKey], setState];
+    return [componentInstance.hooks.useState.get(useStateKey)?.state as T, setState];
   };
 
   /**
@@ -205,15 +208,17 @@ export class ComponentBuilder {
   };
 }
 
-// future work to do
-// Create Component Instance
+/**
+ * CCInstance class manages individual component instances
+ * Handles component properties, state, and lifecycle
+ */
 class CCInstance {
   private component: ComponentFunc | null = null;
   private props: Props | null = null;
   private children: Children | null = null;
   private state: Record<string, any> = {};
 
-  // I think this line is not needed!
+  // Sets the state of the component
   public setState = (newState: Record<string, any>) => {
     Object.assign(this.state, newState);
   };
@@ -222,6 +227,7 @@ class CCInstance {
   private currentState: string | null = null;
   private _instance: HTMLElement | null = null;
 
+  // Returns the current DOM instance
   public get instance(): HTMLElement {
     if (this._instance == null) throw new Error("Instance is given");
     return this._instance;
@@ -230,16 +236,16 @@ class CCInstance {
     this._instance = v;
   }
 
+  // Generates the next state identifier
   public next: () => number = () => {
     if (!this.currentState) throw new Error("The currentState is set");
-    // if (!this.currentState) this.currentState = `state_0`;
-    // fix: state_ as a dynamic value.
     let currentCount = Number(this.currentState.split("state_")[1]);
     currentCount++;
     this.currentState = `state_${currentCount}`;
     return currentCount;
   };
 
+  // Sets the component's properties and state
   public set = ({
     component,
     props,
@@ -260,6 +266,7 @@ class CCInstance {
     this.state = state;
   };
 
+  // Retrieves the component's properties and state
   public get = () => {
     return {
       component: this.component,

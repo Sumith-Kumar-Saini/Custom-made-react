@@ -22,6 +22,20 @@ const tailwindClasses = {
   label: "block text-sm font-medium text-gray-700 dark:text-gray-300",
 };
 
+// Input Component
+const Input = ({ props }: { props: Props }): VDOM => {
+  return createElement("input", { ...props, className: tailwindClasses.input });
+};
+
+// Label Component
+const Label = ({ props, children }: { props: Props; children: Children }): VDOM => {
+  return createElement(
+    "label",
+    { ...props, className: tailwindClasses.label },
+    ...children
+  );
+};
+
 // Button Component
 const Button = ({ props, children }: { props: Props; children: Children }): VDOM => {
   const buttonClasses = `${tailwindClasses.button} ${props.className || ""}`;
@@ -32,20 +46,46 @@ const Button = ({ props, children }: { props: Props; children: Children }): VDOM
   );
 };
 
-// Counter Component with Input and Min/Max Limits
+// Main Counter component with input fields for min/max limits
+// Utilizes useState for state management
 const Counter = (): VDOM => {
   const [count, setCount] = useState(0);
+  const [min, setMin] = useState(0);
+  const [max, setMax] = useState(100);
 
+  // Function to increment the count
   const increment = () => {
+    if (count < max) {
       setCount(count + 1);
+    }
   };
 
+  // Function to decrement the count
   const decrement = () => {
-      setCount(count == 0 ? 0 : count - 1);
+    if (count > min) {
+      setCount(count - 1);
+    }
   };
 
+  // Function to reset the count to the minimum value
   const reset = () => {
-    setCount(0);
+    setCount(min);
+  };
+
+  // Handles changes to the minimum input field
+  const handleMinChange = (event: Event) => {
+    let value = Number((event.target as HTMLInputElement).value) || 0
+    setMin(value);
+    setCount(value > count ? value : count);
+  };
+
+  // Handles changes to the maximum input field
+  const handleMaxChange = (event: Event) => {
+    let value = (Number((event.target as HTMLInputElement).value));
+    value = Number.isNaN(value) ? 100 : value;
+    console.log(value);
+    setMax(value);
+    setCount(value < count ? value : count);
   };
 
   return createElement(
@@ -74,11 +114,31 @@ const Counter = (): VDOM => {
           { className: tailwindClasses.buttonReset, onClick: reset },
           "Reset"
         )
+      ),
+      createElement(
+        "div",
+        null,
+        createElement(Label, null, "Min:"),
+        createElement(Input, {
+          type: "text",
+          value: min,
+          onChange: handleMinChange,
+        })
+      ),
+      createElement(
+        "div",
+        null,
+        createElement(Label, null, "Max:"),
+        createElement(Input, {
+          type: "text",
+          value: max,
+          onChange: handleMaxChange,
+        })
       )
     )
   );
 };
 
-// Usage example
+// Usage example: Render the Counter component into the root element
 const root = document.getElementById("root");
 builder.render(createElement(Counter, null), root);

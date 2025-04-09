@@ -36,6 +36,12 @@ export interface VDOM {
 }
 
 /**
+ * StateMap type definition for managing state in hooks
+ * Maps a string key to a state object
+ */
+type StateMap<F> = Map<string, { state: F }>
+
+/**
  * Component instance interface
  * Represents a mounted component with its state and lifecycle
  */
@@ -54,4 +60,6 @@ export interface ComponentInstance {
   id: number;
   /** The actual DOM element */
   instance: HTMLElement | null;
+  /** the hooks state management, currently supports useState */
+  hooks: { useState: StateMap<T> };
 }
